@@ -21,16 +21,16 @@ class Crawl():
     def crawl_price(self):
         date = datetime.datetime(self.y, self.m, self.d)
     
-        # 將 date 變成字串 舉例：'20180525' 
+        #  date變成字串
         datestr = date.strftime('%Y%m%d')
     
-        # 從網站上依照 datestr 將指定日期的股價抓下來
+        # 從網站依照 datestr 抓取指定日期股價
         r = requests.post('http://www.twse.com.tw/exchangeReport/MI_INDEX?response=csv&date=' + datestr + '&type=ALLBUT0999')
     
-        # 將抓下來的資料（r.text），其中的等號給刪除
+        # 把抓下來的資料（r.text），其中的等號刪除
         content = r.text.replace('=', '')
     
-        # 將 column 數量小於等於 10 的行數都刪除
+        # 把 column 數量小於等於 10 的行數都刪除
         lines = content.split('\n')
         lines = list(filter(lambda l:len(l.split('",')) > 10, lines))
     
