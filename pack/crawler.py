@@ -9,13 +9,15 @@ import datetime
 import pandas as pd
 from io import StringIO
 import sqlite3
-
+import time
+import os
 
 class Crawl():
     def __init__(self, year, month, day):
         self.y = year
         self.m = month
         self.d = day
+        
         
         
     def crawl_price(self):
@@ -41,7 +43,11 @@ class Crawl():
         df = df.apply(lambda s:pd.to_numeric(s, errors='coerce'))
         df = df[df.columns[df.isnull().all() == False]]
         
+        conn = sqlite3.connect('stock.sqlite3')
+        df.to_sql(('daily_price'+"_"+str(self.y)+"-"+str(self.m)+"-"+str(self.d)), conn, if_exists='replace')
+        
         return df
+    
     
     
     def today_choice(self):
@@ -52,10 +58,6 @@ class Crawl():
         
         return dff[['開盤價','收盤價','本益比']]
     
-    
-    def write_sql_dailyprice(self):
-        conn = sqlite3.connect('stock.sqlite3')
-        self.crawl_price().to_sql(('daily_price'+"_"+str(self.y)+"-"+str(self.m)+"-"+str(self.d)), conn, if_exists='replace')
         
     
     def crawl_monthly_report(self):
@@ -96,4 +98,25 @@ class Crawl():
         df.to_sql('monthly_report'+"_"+str(self.y)+"-"+str(self.m), conn, if_exists='replace')
         
         return df
-        
+    
+    
+    def save_season_report(self, stock_id):    
+        if 'season_report' not in os.listdir():
+            os.mkdir('season_report')
+    
+        # 爬取html檔
+        res = requests.get('http://mops.twse.com.tw/server-java/t164sb01?step=1&CO_ID=' + stock_id + '&SYEAR=2017&SSEASON=3&REPORT_ID=C')
+        res.encoding = 'big5'
+    
+        # 設定存檔路徑
+        path = os.path.join('season_report', stock_id + '.html')
+    
+        # 檔案打開，寫入html，然後關閉
+        f = open(path, 'w', encoding='utf-8')
+        f.write(res.text)
+        f.close()
+    
+        print(stock_id)
+    
+        # 休息10秒
+        time.sleep(10)
